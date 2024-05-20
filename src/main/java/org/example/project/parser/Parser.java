@@ -1,4 +1,4 @@
-package project;
+package org.example.project.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -7,12 +7,15 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class Main {
-    public static void main(String[] args) {
+public class Parser {
+    private List<String> vasilyevoTimes;
+    private List<String> kazanTimes;
+
+    public Parser() {
         try {
             Document document = Jsoup.connect("https://zpatp.ru/timetable").get();
             Element articleBody = document.selectFirst("div[itemprop=articleBody]");
@@ -20,8 +23,8 @@ public class Main {
             if (articleBody != null) {
                 Elements h5Elements = articleBody.select("h5:contains(№ 110 \"ВАСИЛЬЕВО - ОСИНОВО - КАЗАНЬ\")");
                 Element h5 = h5Elements.first();
-                List<String> vasilyevoTimes = new ArrayList<>();
-                List<String> kazanTimes = new ArrayList<>();
+                this.vasilyevoTimes = new ArrayList<>();
+                this.kazanTimes = new ArrayList<>();
 
                 Element sibling = h5.nextElementSibling();
                 while (sibling != null && sibling.tagName().equals("ul")) {
@@ -35,25 +38,19 @@ public class Main {
                                 for (Element pElem : li.select("p:contains(Время:)")) {
                                     String timesText = pElem.text().replace("Время: ", "").trim();
                                     String[] timeArray = timesText.split(", ");
-                                    for (String time : timeArray) {
-                                        vasilyevoTimes.add(time);
-                                    }
+                                    this.vasilyevoTimes.addAll(Arrays.asList(timeArray));
                                 }
                             } else if (text.startsWith("Пункт отправления: Казань")) {
                                 for (Element pElem : li.select("p:contains(Время:)")) {
                                     String timesText = pElem.text().replace("Время: ", "").trim();
                                     String[] timeArray = timesText.split(", ");
-                                    for (String time : timeArray) {
-                                        kazanTimes.add(time);
-                                    }
+                                    this.kazanTimes.addAll(Arrays.asList(timeArray));
                                 }
                             }
                         }
                     }
                     sibling = Objects.requireNonNull(sibling.nextElementSibling()).nextElementSibling();
                 }
-                System.out.println(vasilyevoTimes);
-                System.out.println(kazanTimes);
             } else {
                 System.out.println("Element not found");
             }
