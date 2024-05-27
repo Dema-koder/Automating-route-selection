@@ -47,6 +47,9 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+    - name: Add remote host to known_hosts
+      run: ssh-keyscan -H 5.39.249.253 >> ~/.ssh/known_hosts
+
     - name: Copy files via SCP
       run: scp -r target/ root@5.39.249.253:/root
 
@@ -54,4 +57,3 @@ jobs:
       run: ssh root@5.39.249.253 'bash -s' < ./deploy.sh
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
