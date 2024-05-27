@@ -9,12 +9,11 @@ sudo systemctl stop telegram-simple-bot
 
 unzip -o target/myapp.zip -d $DEPLOY_DIR
 
-position=$(grep -n "\[Service\]" $SERVICE_FILE | cut -d: -f1)
+sudo sed -i '/Environment="BOT_TOKEN=/d' /etc/systemd/system/telegram-simple-bot.service
 
-head -n "$position" $SERVICE_FILE > $SERVICE_FILE.temp
-tail -n +"$((position+1))" $SERVICE_FILE >> $SERVICE_FILE.temp
+position=$(awk '/\[Service\]/{print NR}' $SERVICE_FILE)
 
-echo "Environment=\"BOT_TOKEN=${BOT_TOKEN}\"" >> $SERVICE_FILE.temp
+awk -v pos=$((position + 1)) 'NR == pos {print "Environment=\"BOT_TOKEN=${BOT_TOKEN}\""} 1' $SERVICE_FILE | sudo tee $SERVICE_FILE.temp > /dev/null
 
 sudo mv $SERVICE_FILE.temp $SERVICE_FILE
 
