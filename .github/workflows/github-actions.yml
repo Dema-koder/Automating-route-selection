@@ -54,3 +54,4 @@ jobs:
       run: ssh root@5.39.249.253 'bash -s' < ./deploy.sh
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
