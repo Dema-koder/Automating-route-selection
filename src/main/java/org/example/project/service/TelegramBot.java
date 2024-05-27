@@ -36,7 +36,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             "Type /help to see a description of every command\n\n" +
             "Type /addnote to add note\n\n" +
             "Type /mynote to see all your notes\n\n" +
-            "Type /unregister to unregister from the bot, all your notes was deleted";
+            "Type /unregister to unregister from the bot, all your notes was deleted" +
+            "Test";
 
     public TelegramBot(ApplicationConfig config) {
         this.config = config;
