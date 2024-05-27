@@ -13,3 +13,4 @@ sudo sed -i '/Environment="BOT_TOKEN=/d' /etc/systemd/system/telegram-simple-bot
 sudo systemctl daemon-reload
 
 sudo systemctl start telegram-simple-bot
+
