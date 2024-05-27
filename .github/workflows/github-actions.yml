@@ -34,6 +34,9 @@ jobs:
     - name: Run tests
       run: mvn test
 
+    - name: List files after build
+      run: ls -la
+
     - name: Verify target directory exists after build
       run: ls -la target/
 
@@ -52,6 +55,9 @@ jobs:
 
     - name: Add remote host to known_hosts
       run: ssh-keyscan -H 5.39.249.253 >> ~/.ssh/known_hosts
+
+    - name: List files before SCP
+      run: ls -la
 
     - name: Copy files via SCP
       run: scp -r target/ root@5.39.249.253:/root
