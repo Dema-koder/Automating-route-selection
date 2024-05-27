@@ -76,4 +76,6 @@ jobs:
         run: scp -r target/ root@5.39.249.253:/root
 
       - name: Run deployment script
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: ssh root@5.39.249.253 'BOT_TOKEN=${{ secrets.BOT_TOKEN }} bash -s' < ./deploy.sh

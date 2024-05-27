@@ -6,9 +6,10 @@ cd $DEPLOY_DIR
 
 sudo systemctl stop telegram-simple-bot
 
-unzip target/myapp.zip -d $DEPLOY_DIR
+unzip -o target/myapp.zip -d $DEPLOY_DIR
 
-sudo sed -i '/\[Service\]/a Environment="BOT_TOKEN=${BOT_TOKEN}"' /etc/systemd/system/telegram-simple-bot.service
+sudo sed -i '/Environment="BOT_TOKEN=/d' /etc/systemd/system/telegram-simple-bot.service
+echo "Environment=\"BOT_TOKEN=${BOT_TOKEN}\"" | sudo tee -a /etc/systemd/system/telegram-simple-bot.service
 
 sudo systemctl daemon-reload
 
