@@ -78,4 +78,5 @@ jobs:
       - name: Run deployment script
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-        run: ssh root@5.39.249.253 'BOT_TOKEN=${{ secrets.BOT_TOKEN }} bash -s' < ./deploy.sh
+          GPT_TOKEN: ${{ secrets.GPT_TOKEN }}
+        run: ssh root@5.39.249.253 'BOT_TOKEN=${{ secrets.BOT_TOKEN }} GPT_TOKEN=${{ secrets.GPT_TOKEN }} bash -s' < ./deploy.sh
