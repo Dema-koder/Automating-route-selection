@@ -30,12 +30,6 @@ public class ChatGPTService {
                 .init();
     }
 
-    // Конструктор для тестирования
-    public ChatGPTService(ApplicationConfig config, ChatGPT chatGPT) {
-        this.config = config;
-        this.chatGPT = chatGPT;
-    }
-
     public String sendMessage(String prompt, String question) {
         Message system = Message.ofSystem(prompt);
         Message message = Message.of(question);
