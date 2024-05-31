@@ -80,4 +80,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - [OpenAI](https://www.openai.com/) for chatGPT
 - [OpenAI API](https://beta.openai.com/docs/api-reference/introduction) for integrating chatGPT
 
-For any questions or feedback, please contact [@dema_koder].
+For any questions or feedback, please contact [@dema_koder]
