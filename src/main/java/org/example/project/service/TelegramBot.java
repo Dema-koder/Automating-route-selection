@@ -197,8 +197,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         } else {
             String message = "Write your note";
             sendMessage(chatId, message);
+            dialogMode = DialogMode.ADD_NOTE;
         }
-        dialogMode = DialogMode.ADD_NOTE;
     }
 
     private void unregisterReceived(long chatId) {
