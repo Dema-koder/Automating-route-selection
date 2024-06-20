@@ -13,6 +13,7 @@ public class NoteService {
     @Autowired
     private NoteRepository noteRepository;
 
+
     public List<Note> getNotesByUser(Users user) {
         return noteRepository.findByUsers(user);
     }
