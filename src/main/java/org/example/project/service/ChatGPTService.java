@@ -33,7 +33,8 @@ public class ChatGPTService {
     public String sendMessage(String prompt, String question) {
         Message system = Message.ofSystem(prompt);
         Message message = Message.of(question);
-        messageHistory = new ArrayList<>(Arrays.asList(system, message));
+        messageHistory.add(system);
+        messageHistory.add(message);
 
         return sendMessagesToChatGPT();
     }
