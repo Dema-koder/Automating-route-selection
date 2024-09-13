@@ -114,7 +114,10 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void questionToGptReceived(long chatId, String question) {
-        String answer = chatGPTService.sendMessage("", question);
+        String answer = chatGPTService.sendMessage("Напиши максимально подробный ответ(если не требуется обратного)" +
+                " на поставленный вопрос. В ответах в которых необходимо писать код НЕ пиши комментарии внутри кода, напиши " +
+                "их отдельно. В случае если ответ получается большим то не обрезай ответ, то есть всегда выдавай целостный " +
+                "ответ. ВСЕГДА отвечай по русски, даже если вопрос на английском.", question);
         sendMessage(chatId, answer);
         dialogMode = DialogMode.MAIN;
     }
