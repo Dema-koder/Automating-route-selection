@@ -4,6 +4,7 @@ import com.plexpt.chatgpt.ChatGPT;
 import com.plexpt.chatgpt.entity.chat.ChatCompletion;
 import com.plexpt.chatgpt.entity.chat.ChatCompletionResponse;
 import com.plexpt.chatgpt.entity.chat.Message;
+import lombok.extern.slf4j.Slf4j;
 import org.example.project.configuration.ApplicationConfig;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+@Slf4j
 @Component
 public class ChatGPTService {
     private ChatGPT chatGPT;
@@ -31,6 +33,8 @@ public class ChatGPTService {
     }
 
     public String sendMessage(String prompt, String question) {
+        log.info("Question: {}", question);
+
         Message system = Message.ofSystem(prompt);
         Message message = Message.of(question);
         messageHistory.add(system);
@@ -41,11 +45,13 @@ public class ChatGPTService {
 
     private String sendMessagesToChatGPT(){
         ChatCompletion chatCompletion = ChatCompletion.builder()
-                .model(ChatCompletion.Model.GPT4Turbo.getName()) // GPT4Turbo or GPT_3_5_TURBO
+                .model(ChatCompletion.Model.GPT4)
                 .messages(messageHistory)
                 .maxTokens(3000)
                 .temperature(0.9)
                 .build();
+
+        log.info("{} tokens: {}", chatCompletion.getModel(), chatCompletion.countTokens());
 
         ChatCompletionResponse response = chatGPT.chatCompletion(chatCompletion);
         Message res = response.getChoices().get(0).getMessage();

@@ -14,6 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Autowired
     private ChatGPTService chatGPTService;
+
+    @Autowired
+    private IPService ipService;
 
     final ApplicationConfig config;
 
@@ -58,6 +62,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         listOfCommand.add(new BotCommand("/mynote", "get your notes"));
         listOfCommand.add(new BotCommand("/busschedule", "check schedule of buses"));
         listOfCommand.add(new BotCommand("/gpt", "get answer from ChatGpt"));
+        listOfCommand.add(new BotCommand("/ip", "get your current ip"));
         try {
             this.execute(new SetMyCommands(listOfCommand, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -95,6 +100,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                         case "/gpt":
                             gptReceived(chatId);
                             break;
+                        case "/ip":
+                            getIP(chatId);
+                            break;
                         default:
                             sendMessage(chatId, "Sorry, command was not recognized");
                             break;
@@ -114,10 +122,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void questionToGptReceived(long chatId, String question) {
-        String answer = chatGPTService.sendMessage("Напиши максимально подробный ответ(если не требуется обратного)" +
-                " на поставленный вопрос. В ответах в которых необходимо писать код НЕ пиши комментарии внутри кода, напиши " +
-                "их отдельно. В случае если ответ получается большим то не обрезай ответ, то есть всегда выдавай целостный " +
-                "ответ. ВСЕГДА отвечай по русски, даже если вопрос на английском.", question);
+        String answer = chatGPTService.sendMessage("", question);
         sendMessage(chatId, answer);
         dialogMode = DialogMode.MAIN;
     }
@@ -126,6 +131,20 @@ public class TelegramBot extends TelegramLongPollingBot {
         String answer = "Write your question:";
         sendMessage(chatId, answer);
         dialogMode = DialogMode.WAIT_QUESTION;
+    }
+
+    private void getIP(long chatId) {
+        String answer = "Your current IP: ";
+        try {
+            answer += ipService.getIP();
+        } catch (NullPointerException e) {
+            answer = e.getMessage();
+            log.error("Exception: %s".formatted(e.getMessage()));
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        sendMessage(chatId, answer);
+        dialogMode = DialogMode.MAIN;
     }
 
     private void sendBusSchedule(long chatId, String variant) {
