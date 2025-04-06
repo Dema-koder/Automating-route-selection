@@ -103,6 +103,9 @@ jobs:
           scp .env $SERVER_USER@$SERVER_IP:~/Automating-route-selection/.env
           
           ssh $SERVER_USER@$SERVER_IP << 'EOF'
+            cd ~/Automating-route-selection
             sudo docker-compose down || true
             sudo docker-compose up -d --build
           EOF
+          
+          rm -f .env
