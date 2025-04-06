@@ -32,7 +32,7 @@ public class ChatGPTService {
                 .init();
     }
 
-    public String sendMessage(String prompt, String question) {
+    public String sendMessage(String prompt, String question, String model) {
         log.info("Question: {}", question);
 
         Message system = Message.ofSystem(prompt);
@@ -40,12 +40,12 @@ public class ChatGPTService {
         messageHistory.add(system);
         messageHistory.add(message);
 
-        return sendMessagesToChatGPT();
+        return sendMessagesToChatGPT(model);
     }
 
-    private String sendMessagesToChatGPT(){
+    private String sendMessagesToChatGPT(String model){
         ChatCompletion chatCompletion = ChatCompletion.builder()
-                .model(ChatCompletion.Model.GPT4oMini)
+                .model(model)
                 .messages(messageHistory)
                 .maxTokens(3000)
                 .temperature(0.9)

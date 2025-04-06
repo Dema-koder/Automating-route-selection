@@ -1,5 +1,6 @@
 package org.example.project.service;
 
+import com.plexpt.chatgpt.entity.chat.ChatCompletion;
 import lombok.extern.slf4j.Slf4j;
 import org.example.project.configuration.ApplicationConfig;
 import org.example.project.domain.Users;
@@ -41,6 +42,8 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private DialogMode dialogMode;
 
+    private String gptVersion = "";
+
     static final String HELP_TEXT = "This bot is created by Demyan Zverev and for his own purpose\n\n" +
             "You can execute from the main menu on the left or by typing command: \n\n" +
             "Type /start to see a welcome message\n\n" +
@@ -75,6 +78,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
+
 
             switch(dialogMode) {
                 case MAIN:
@@ -114,25 +118,50 @@ public class TelegramBot extends TelegramLongPollingBot {
                 case WAIT_DEPARTURE_PLACE:
                     sendBusSchedule(chatId, messageText);
                     break;
+                case WAIT_GPT_VERSION:
+                    gptVersion = gptVersionReceived(chatId, messageText);
+                    break;
                 case WAIT_QUESTION:
-                    questionToGptReceived(chatId, messageText);
+                    questionToGptReceived(chatId, messageText, gptVersion);
                     break;
             }
         }
     }
 
     // TODO: Изменить взаимодействие с ChatGPT в боте
-    private void questionToGptReceived(long chatId, String question) {
+    private void questionToGptReceived(long chatId, String question, String model) {
         log.info("Send message to ChatGPT");
-        String answer = chatGPTService.sendMessage("", question);
+        String answer = chatGPTService.sendMessage("", question, model);
         sendMessage(chatId, answer);
         dialogMode = DialogMode.MAIN;
     }
 
     private void gptReceived(long chatId) {
+        String answer = """
+                Choose version of ChatGPT:
+                1) GPT 3.5 Turbo
+                2) GPT 4
+                3) GPT 4o mini
+                4) GPT 4o
+                Print only digit""";
+        sendMessage(chatId, answer);
+        dialogMode = DialogMode.WAIT_GPT_VERSION;
+    }
+
+    private String gptVersionReceived(long chatId, String gptVersion) {
         String answer = "Write your question:";
         sendMessage(chatId, answer);
         dialogMode = DialogMode.WAIT_QUESTION;
+        return whichGptVersion(gptVersion);
+    }
+
+    private String whichGptVersion(String version) {
+        return switch (version) {
+            case "2" -> ChatCompletion.Model.GPT4;
+            case "3" -> ChatCompletion.Model.GPT4oMini;
+            case "4" -> ChatCompletion.Model.GPT4o;
+            default -> ChatCompletion.Model.GPT_3_5_TURBO;
+        };
     }
 
     private void getIP(long chatId) {
