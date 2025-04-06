@@ -73,6 +73,20 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
         run: |
           ssh $SERVER_USER@$SERVER_IP << 'EOF'
+            # Установка зависимостей (если их нет)
+            if ! command -v docker &> /dev/null; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+              sudo systemctl enable docker
+              sudo systemctl start docker
+            fi
+
+            if ! command -v docker-compose &> /dev/null; then
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+
+            # Работа с репозиторием
             if [ -d "Automating-route-selection" ]; then
               cd Automating-route-selection
               git pull origin main
@@ -80,12 +94,12 @@ jobs:
               git clone https://github.com/Dema-koder/Automating-route-selection.git
               cd Automating-route-selection
             fi
-    
-            # Создаем .env файл с секретами
+
+            # Создание .env
             echo "BOT_TOKEN=$BOT_TOKEN" > .env
             echo "GPT_TOKEN=$GPT_TOKEN" >> .env
-    
-            # Запускаем приложение
-            docker-compose down
-            docker-compose up -d --build
+
+            # Запуск приложения
+            sudo docker-compose down || true
+            sudo docker-compose up -d --build
           EOF
