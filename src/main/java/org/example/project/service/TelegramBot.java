@@ -83,7 +83,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                             startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                             break;
                         case "/help":
-                            sendMessage(chatId, HELP_TEXT);
+                            helpReceived(chatId);
                             break;
                         case "/unregister":
                             unregisterReceived(chatId);
@@ -104,7 +104,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                             getIP(chatId);
                             break;
                         default:
-                            sendMessage(chatId, "Sorry, command was not recognized");
+                            wrongCommandReceived(chatId);
                             break;
                     }
                     break;
@@ -121,7 +121,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    // TODO: Изменить взаимодействие с ChatGPT в боте
     private void questionToGptReceived(long chatId, String question) {
+        log.info("Send message to ChatGPT");
         String answer = chatGPTService.sendMessage("", question);
         sendMessage(chatId, answer);
         dialogMode = DialogMode.MAIN;
@@ -189,6 +191,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void myNoteReceived(long chatId) {
+        log.info("Got myNote command from {}", chatId);
         Users users = userService.getUserByChatId(chatId);
         if (users == null) {
             sendMessage(chatId, "Firstly, please register");
@@ -196,7 +199,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             var notes = noteService.getNotesByUser(users);
             StringBuilder builder = new StringBuilder();
             builder.append("Your notes: \n\n");
+            int k = 1;
             for (var note: notes) {
+                builder.append(k++).append(") ");
                 builder.append(note.getContent());
                 builder.append("\n\n");
             }
@@ -236,6 +241,16 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    private void helpReceived(long chatId) {
+        log.info("Help command received from user {}", chatId);
+        sendMessage(chatId, HELP_TEXT);
+    }
+
+    private void wrongCommandReceived(long chatId) {
+        log.info("Wrong command received from user {}", chatId);
+        sendMessage(chatId, "Sorry, command was not recognized");
+    }
+
     private void startCommandReceived(long chatId, String name) {
         Users users = userService.getUserByChatId(chatId);
         if (users == null) {
@@ -251,13 +266,16 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void sendMessage(long chatId, String textToSend) {
+        var messages = splitString(textToSend, 4096);
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(textToSend);
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            log.error("Error occurred: {}", e.getMessage());
+        for (var message: messages) {
+            sendMessage.setChatId(chatId);
+            sendMessage.setText(message);
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                log.error("Error occurred: {}", e.getMessage());
+            }
         }
     }
 
@@ -269,5 +287,23 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public String getBotToken() {
         return config.getBotToken();
+    }
+
+    private String[] splitString(String str, int length) {
+        if (str == null || length <= 0) {
+            return new String[0];
+        }
+
+        int partsCount = (int) Math.ceil((double) str.length() / length);
+        String[] parts = new String[partsCount];
+
+        for (int i = 0; i < partsCount; i++) {
+            int start = i * length;
+            int end = Math.min(start + length, str.length());
+            parts[i] = str.substring(start, end);
+        }
+
+        return parts;
+
     }
 }

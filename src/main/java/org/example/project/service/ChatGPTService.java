@@ -45,7 +45,7 @@ public class ChatGPTService {
 
     private String sendMessagesToChatGPT(){
         ChatCompletion chatCompletion = ChatCompletion.builder()
-                .model(ChatCompletion.Model.GPT4)
+                .model(ChatCompletion.Model.GPT4oMini)
                 .messages(messageHistory)
                 .maxTokens(3000)
                 .temperature(0.9)
