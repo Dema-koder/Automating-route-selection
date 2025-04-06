@@ -94,10 +94,11 @@ jobs:
               git clone https://github.com/Dema-koder/Automating-route-selection.git
               cd Automating-route-selection
             fi
-
-            # Создание .env
-            echo "BOT_TOKEN=$BOT_TOKEN" > .env
-            echo "GPT_TOKEN=$GPT_TOKEN" >> .env
+          
+            cat > .env <<EOL
+            BOT_TOKEN=$BOT_TOKEN
+            GPT_TOKEN=$GPT_TOKEN
+            EOL
 
             # Запуск приложения
             sudo docker-compose down || true
