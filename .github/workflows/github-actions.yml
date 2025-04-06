@@ -96,9 +96,9 @@ jobs:
             fi
           
             cat > .env <<EOL
-BOT_TOKEN=$BOT_TOKEN
-GPT_TOKEN=$GPT_TOKEN
-EOL
+          BOT_TOKEN=$BOT_TOKEN
+          GPT_TOKEN=$GPT_TOKEN
+          EOL
 
             # Запуск приложения
             sudo docker-compose down || true
