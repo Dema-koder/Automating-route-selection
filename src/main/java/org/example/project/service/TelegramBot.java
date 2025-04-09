@@ -1,23 +1,35 @@
 package org.example.project.service;
 
 import com.plexpt.chatgpt.entity.chat.ChatCompletion;
+import com.plexpt.chatgpt.entity.chat.Message;
 import lombok.extern.slf4j.Slf4j;
 import org.example.project.configuration.ApplicationConfig;
+import org.example.project.data.UserSession;
+import org.example.project.domain.ChatGptMessages;
 import org.example.project.domain.Users;
 import org.example.project.parser.Parser;
+import org.example.project.repository.ChatGptMessagesRepository;
+import org.example.project.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.ActionType;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
+import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Component
@@ -38,11 +50,20 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Autowired
     private IPService ipService;
 
+    @Autowired
+    private BotKeyboard botKeyboard;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ChatGptMessagesRepository chatGptMessagesRepository;
+
     final ApplicationConfig config;
 
-    private DialogMode dialogMode;
+    private final ConcurrentHashMap<Long, UserSession> userSessions = new ConcurrentHashMap<>();
 
-    private String gptVersion = "";
+    private final ExecutorService executorService;
 
     static final String HELP_TEXT = "This bot is created by Demyan Zverev and for his own purpose\n\n" +
             "You can execute from the main menu on the left or by typing command: \n\n" +
@@ -56,7 +77,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     public TelegramBot(ApplicationConfig config) {
         this.config = config;
-        this.dialogMode = DialogMode.MAIN;
+        this.executorService = Executors.newFixedThreadPool(10);
         List<BotCommand> listOfCommand = new ArrayList<>();
         listOfCommand.add(new BotCommand("/start", "get a welcome message"));
         listOfCommand.add(new BotCommand("/unregister", "delete my data"));
@@ -66,6 +87,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         listOfCommand.add(new BotCommand("/busschedule", "check schedule of buses"));
         listOfCommand.add(new BotCommand("/gpt", "get answer from ChatGpt"));
         listOfCommand.add(new BotCommand("/ip", "get your current ip"));
+        listOfCommand.add(new BotCommand("/test", "test"));
         try {
             this.execute(new SetMyCommands(listOfCommand, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -73,12 +95,21 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    private UserSession getSession(long chatId) {
+        return userSessions.computeIfAbsent(chatId, k -> new UserSession(DialogMode.MAIN, "", new ArrayList<>()));
+    }
+
     @Override
     public void onUpdateReceived(Update update) {
+        executorService.submit(() -> executeUpdate(update));
+    }
+
+    private void executeUpdate(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
-
+            var session = getSession(chatId);
+            var dialogMode = session.getDialogMode();
 
             switch(dialogMode) {
                 case MAIN:
@@ -102,10 +133,18 @@ public class TelegramBot extends TelegramLongPollingBot {
                             busScheduleReceived(chatId);
                             break;
                         case "/gpt":
+                            if (userRepository.findByChatId(chatId) == null) {
+                                sendMessage(chatId, "Please, register first");
+                                getSession(chatId).setDialogMode(DialogMode.MAIN);
+                                break;
+                            }
                             gptReceived(chatId);
                             break;
                         case "/ip":
                             getIP(chatId);
+                            break;
+                        case "/test":
+                            checkKeyboard(chatId);
                             break;
                         default:
                             wrongCommandReceived(chatId);
@@ -119,21 +158,63 @@ public class TelegramBot extends TelegramLongPollingBot {
                     sendBusSchedule(chatId, messageText);
                     break;
                 case WAIT_GPT_VERSION:
-                    gptVersion = gptVersionReceived(chatId, messageText);
+                    session.setGptVersion(gptVersionReceived(chatId, messageText));
                     break;
                 case WAIT_QUESTION:
-                    questionToGptReceived(chatId, messageText, gptVersion);
+                    if (messageText.equals("Exit")) {
+                        getSession(chatId).setDialogMode(DialogMode.MAIN);
+                        break;
+                    }
+                    questionToGptReceived(chatId, messageText, session.getGptVersion(), session.getMessageHistory());
                     break;
             }
         }
     }
 
     // TODO: Изменить взаимодействие с ChatGPT в боте
-    private void questionToGptReceived(long chatId, String question, String model) {
-        log.info("Send message to ChatGPT");
-        String answer = chatGPTService.sendMessage("", question, model);
-        sendMessage(chatId, answer);
-        dialogMode = DialogMode.MAIN;
+    private void questionToGptReceived(long chatId, String question, String model, List<Message> messageHistory) {
+        log.info("Sending message to ChatGPT for chatId: {}", chatId);
+
+        sendTypingAction(chatId);
+
+        executorService.submit(() -> {
+            try {
+                String answer = chatGPTService.sendMessage("", question, model, messageHistory);
+                sendMessage(chatId, answer);
+                executorService.submit(() -> {
+                    try {
+                        saveChatGptMessages(question, answer, chatId);
+                    } catch (Exception e) {
+                        log.error("Can not save message to database: ", e);
+                    }
+                });
+            } catch (Exception e) {
+                log.error("ChatGPT request failed for chatId: {}", chatId, e);
+                sendMessage(chatId, "⚠️ Произошла ошибка при обработке запроса");
+            } finally {
+                getSession(chatId).setDialogMode(DialogMode.WAIT_QUESTION);
+            }
+        });
+    }
+
+    private void saveChatGptMessages(String question, String answer, long chatId) {
+        Long userId = userRepository.findByChatId(chatId).getId();
+        chatGptMessagesRepository.save(ChatGptMessages.builder()
+                .question(question)
+                .answer(answer)
+                .userId(userId)
+                .build());
+    }
+
+    private void sendTypingAction(long chatId) {
+        SendChatAction action = new SendChatAction();
+        action.setChatId(chatId);
+        action.setAction(ActionType.TYPING);
+        try {
+            execute(action);
+        } catch (TelegramApiException e) {
+            log.warn("Failed to send typing action for chatId: {}", chatId, e);
+        }
     }
 
     private void gptReceived(long chatId) {
@@ -144,14 +225,14 @@ public class TelegramBot extends TelegramLongPollingBot {
                 3) GPT 4o mini
                 4) GPT 4o
                 Print only digit""";
-        sendMessage(chatId, answer);
-        dialogMode = DialogMode.WAIT_GPT_VERSION;
+        sendMessageWithKeyboard(chatId, answer, botKeyboard.createGptVersionKeyboard());
+        getSession(chatId).setDialogMode(DialogMode.WAIT_GPT_VERSION);
     }
 
     private String gptVersionReceived(long chatId, String gptVersion) {
         String answer = "Write your question:";
-        sendMessage(chatId, answer);
-        dialogMode = DialogMode.WAIT_QUESTION;
+        sendMessageWithKeyboard(chatId, answer, botKeyboard.createGptKeyboard());
+        getSession(chatId).setDialogMode(DialogMode.WAIT_QUESTION);
         return whichGptVersion(gptVersion);
     }
 
@@ -175,7 +256,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             throw new RuntimeException(e);
         }
         sendMessage(chatId, answer);
-        dialogMode = DialogMode.MAIN;
+        getSession(chatId).setDialogMode(DialogMode.MAIN);
     }
 
     private void sendBusSchedule(long chatId, String variant) {
@@ -207,7 +288,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 sendMessage(chatId, answer);
                 break;
         }
-        dialogMode = DialogMode.MAIN;
+        getSession(chatId).setDialogMode(DialogMode.MAIN);
     }
 
     private void busScheduleReceived(long chatId) {
@@ -216,7 +297,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 "2. From Kazan\n\n" +
                 "Send only one digit(1 or 2):";
         sendMessage(chatId, answer);
-        dialogMode = DialogMode.WAIT_DEPARTURE_PLACE;
+        getSession(chatId).setDialogMode(DialogMode.WAIT_DEPARTURE_PLACE);
     }
 
     private void myNoteReceived(long chatId) {
@@ -243,7 +324,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         Users users = userService.getUserByChatId(chatId);
         noteService.saveNote(users, content);
         sendMessage(chatId, "Note successfully added");
-        dialogMode = DialogMode.MAIN;
+        getSession(chatId).setDialogMode(DialogMode.MAIN);
     }
 
     private void addNoteReceived(long chatId) {
@@ -253,7 +334,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         } else {
             String message = "Write your note";
             sendMessage(chatId, message);
-            dialogMode = DialogMode.ADD_NOTE;
+            getSession(chatId).setDialogMode(DialogMode.ADD_NOTE);
         }
     }
 
@@ -300,6 +381,23 @@ public class TelegramBot extends TelegramLongPollingBot {
         for (var message: messages) {
             sendMessage.setChatId(chatId);
             sendMessage.setText(message);
+            sendMessage.setParseMode(ParseMode.MARKDOWN);
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                log.error("Error occurred: {}", e.getMessage());
+            }
+        }
+    }
+
+    private void sendMessageWithKeyboard(long chatId, String textToSend, ReplyKeyboardMarkup keyboard) {
+        var messages = splitString(textToSend, 4096);
+        SendMessage sendMessage = new SendMessage();
+        for (var message: messages) {
+            sendMessage.setChatId(chatId);
+            sendMessage.setText(message);
+            sendMessage.setParseMode(ParseMode.MARKDOWN);
+            sendMessage.setReplyMarkup(keyboard);
             try {
                 execute(sendMessage);
             } catch (TelegramApiException e) {
@@ -334,5 +432,17 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         return parts;
 
+    }
+
+    private void checkKeyboard(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("Выберите действие:");
+        message.setReplyMarkup(botKeyboard.createMainMenuKeyboard());
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Error occurred: {}", e.getMessage());
+        }
     }
 }

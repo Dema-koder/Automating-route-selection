@@ -12,13 +12,13 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @Component
 public class ChatGPTService {
     private ChatGPT chatGPT;
     final ApplicationConfig config;
-    private ArrayList<Message> messageHistory = new ArrayList<>();
 
     public ChatGPTService(ApplicationConfig config) {
         this.config = config;
@@ -32,18 +32,19 @@ public class ChatGPTService {
                 .init();
     }
 
-    public String sendMessage(String prompt, String question, String model) {
+    public String sendMessage(String prompt, String question, String model, List<Message> history) {
         log.info("Question: {}", question);
 
         Message system = Message.ofSystem(prompt);
         Message message = Message.of(question);
-        messageHistory.add(system);
-        messageHistory.add(message);
 
-        return sendMessagesToChatGPT(model);
+        history.add(system);
+        history.add(message);
+
+        return sendMessagesToChatGPT(model, history);
     }
 
-    private String sendMessagesToChatGPT(String model){
+    private String sendMessagesToChatGPT(String model, List<Message> messageHistory){
         ChatCompletion chatCompletion = ChatCompletion.builder()
                 .model(model)
                 .messages(messageHistory)

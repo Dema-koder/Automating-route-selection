@@ -18,27 +18,6 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: app
-    depends_on:
-      postgres:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/app_db
-      SPRING_DATASOURCE_USERNAME: app_user
-      SPRING_DATASOURCE_PASSWORD: secretpass
-      SPRING_JPA_HIBERNATE_DDL-AUTO: update
-      BOT_TOKEN: ${BOT_TOKEN}
-      GPT_TOKEN: ${GPT_TOKEN}
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-
   leetcode:
     image: alfaarghya/alfa-leetcode-api:2.0.1
     container_name: leetcode
