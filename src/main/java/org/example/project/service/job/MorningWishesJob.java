@@ -25,7 +25,7 @@ public class MorningWishesJob {
             "настраивать на продуктивный день, оно должно быть не сильно большим, но и не сильно маленьким. " +
             "В ответ пришли только пожелание, без лишнего текста";
 
-    @Scheduled(cron = "* * 9 * * *")
+    @Scheduled(cron = "0 0 6 * * *")
     public void scheduleMorningWishes() {
         var users = userRepository.getAllUsers();
 
