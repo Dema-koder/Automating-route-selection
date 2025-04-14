@@ -31,6 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
+// TODO: разбить класс, тут есть функциональность которая нудна для бота, а также функциональность которая отвечает за работу с пользователями
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
@@ -171,7 +173,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    // TODO: Изменить взаимодействие с ChatGPT в боте
     private void questionToGptReceived(long chatId, String question, String model, List<Message> messageHistory) {
         log.info("Sending message to ChatGPT for chatId: {}", chatId);
 
@@ -375,7 +376,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendMessage(long chatId, String textToSend) {
+    // TODO: убрать из этого класса, так как эта функция нужна и в других классах
+    public void sendMessage(long chatId, String textToSend) {
         var messages = splitString(textToSend, 4096);
         SendMessage sendMessage = new SendMessage();
         for (var message: messages) {
@@ -390,6 +392,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    // TODO: убрать из этого класса, так как эта функция нужна и в других классах
     private void sendMessageWithKeyboard(long chatId, String textToSend, ReplyKeyboardMarkup keyboard) {
         var messages = splitString(textToSend, 4096);
         SendMessage sendMessage = new SendMessage();
