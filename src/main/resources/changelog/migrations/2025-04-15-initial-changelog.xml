@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1" author="Zverev-DE">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+        <createTable tableName="users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="chat_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="Zverev-DE">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="users"/>
+            <not>
+                <tableExists tableName="note"/>
+            </not>
+        </preConditions>
+        <createTable tableName="note">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="users_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_note_users" references="users(id)"/>
+            </column>
+            <column name="content" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="Zverev-DE">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="chat_gpt_messages"/>
+            </not>
+        </preConditions>
+        <createTable tableName="chat_gpt_messages">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="question" type="VARCHAR(5000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="answer" type="VARCHAR(5000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
