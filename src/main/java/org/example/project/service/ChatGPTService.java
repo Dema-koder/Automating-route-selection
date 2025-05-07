@@ -60,4 +60,5 @@ public class ChatGPTService {
 
         return res.getContent();
     }
+    
 }
