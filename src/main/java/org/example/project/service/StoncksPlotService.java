@@ -13,7 +13,7 @@ public class StoncksPlotService {
     public String getPlotImage(String period) {
         try {
             HttpClient client = HttpClient.newHttpClient();
-            String pythonServiceUrl = "http://zealous_grothendieck:8000/plot?period=week";
+            String pythonServiceUrl = "http://localhost:8000/plot?period=week";
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI(pythonServiceUrl))
                     .GET()
