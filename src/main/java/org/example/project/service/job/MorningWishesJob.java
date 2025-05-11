@@ -1,25 +1,21 @@
 package org.example.project.service.job;
 
+import lombok.RequiredArgsConstructor;
 import org.example.project.repository.UserRepository;
 import org.example.project.service.ChatGPTService;
-import org.example.project.service.TelegramBot;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.project.service.TelegramMessageSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
 @Service
+@RequiredArgsConstructor
 public class MorningWishesJob {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private TelegramBot telegramBot;
-
-    @Autowired
-    private ChatGPTService chatGPTService;
+    private final UserRepository userRepository;
+    private final TelegramMessageSender telegramMessageSender;
+    private final ChatGPTService chatGPTService;
 
     private final String PROMPT = "Напиши пожелание с добрым утром. Это пожелание должно поднимать настроение и " +
             "настраивать на продуктивный день, оно должно быть не сильно большим, но и не сильно маленьким. " +
@@ -31,7 +27,7 @@ public class MorningWishesJob {
 
         var message = chatGPTService.sendMessage("", PROMPT, "gpt-3.5-turbo", new ArrayList<>());
         for (var user: users) {
-            telegramBot.sendMessage(user.getChatId(), message);
+            telegramMessageSender.sendMessage(user.getChatId(), message);
         }
     }
 }

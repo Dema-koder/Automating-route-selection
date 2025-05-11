@@ -2,7 +2,9 @@ package org.example.project.configuration;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.project.service.TelegramBot;
+import org.example.project.service.TelegramMessageSender;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
