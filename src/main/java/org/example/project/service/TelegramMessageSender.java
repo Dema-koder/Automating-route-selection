@@ -84,7 +84,7 @@ public class TelegramMessageSender implements MessageSender{
 
     }
 
-    public void sendPlotToUser(Long chatId, String htmlResponse) {
+    public void sendPlotToUserWithKeyboard(Long chatId, String htmlResponse, ReplyKeyboardMarkup keyboard) {
         try {
             String base64Prefix = "data:image/png;base64,";
             int startIndex = htmlResponse.indexOf(base64Prefix) + base64Prefix.length();
@@ -97,6 +97,7 @@ public class TelegramMessageSender implements MessageSender{
 
             SendPhoto sendPhoto = SendPhoto.builder()
                     .chatId(chatId.toString())
+                    .replyMarkup(keyboard)
                     .photo(photo)
                     .caption("График изменения портфеля")
                     .build();
