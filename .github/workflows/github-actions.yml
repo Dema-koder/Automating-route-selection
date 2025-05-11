@@ -71,10 +71,14 @@ jobs:
           GPT_TOKEN: ${{ secrets.GPT_TOKEN }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
+          T_INVEST_TOKEN: ${{ secrets.T_INVEST_TOKEN }}
+          T_INVEST_USER_ID: ${{ secrets.T_INVEST_USER_ID }}
         run: |
           cat > .env <<EOL
           BOT_TOKEN=$BOT_TOKEN
           GPT_TOKEN=$GPT_TOKEN
+          T_INVEST_TOKEN=$T_INVEST_TOKEN
+          T_INVEST_USER_ID=$T_INVEST_USER_ID
           EOL
           ssh $SERVER_USER@$SERVER_IP << 'EOF'
             # Установка зависимостей (если их нет)
