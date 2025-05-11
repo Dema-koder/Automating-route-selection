@@ -6,8 +6,13 @@ import org.telegram.telegrambots.meta.api.methods.ActionType;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.io.ByteArrayInputStream;
+import java.util.Base64;
 
 @Slf4j
 @Component
@@ -77,6 +82,29 @@ public class TelegramMessageSender implements MessageSender{
 
         return parts;
 
+    }
+
+    public void sendPlotToUser(Long chatId, String htmlResponse) {
+        try {
+            String base64Prefix = "data:image/png;base64,";
+            int startIndex = htmlResponse.indexOf(base64Prefix) + base64Prefix.length();
+            int endIndex = htmlResponse.indexOf("\"", startIndex);
+            String base64Image = htmlResponse.substring(startIndex, endIndex);
+
+            byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+
+            InputFile photo = new InputFile(new ByteArrayInputStream(imageBytes), "plot.png");
+
+            SendPhoto sendPhoto = SendPhoto.builder()
+                    .chatId(chatId.toString())
+                    .photo(photo)
+                    .caption("График изменения портфеля")
+                    .build();
+
+            bot.execute(sendPhoto);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
 }

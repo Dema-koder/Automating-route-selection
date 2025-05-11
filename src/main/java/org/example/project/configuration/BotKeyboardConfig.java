@@ -26,6 +26,7 @@ public class BotKeyboardConfig {
 
         KeyboardRow row3 = new KeyboardRow();
         row3.add(new KeyboardButton("/leetcode"));
+        row3.add(new KeyboardButton("/investplot"));
 
         keyboard.add(row1);
         keyboard.add(row2);
