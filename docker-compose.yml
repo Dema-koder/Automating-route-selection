@@ -24,10 +24,8 @@ services:
       dockerfile: Dockerfile
     container_name: app
     depends_on:
-      postgres:
-        condition: service_healthy
-      leetcode:
-        condition: service_healthy
+      - postgres
+      - leetcode
     env_file:
       - .env
     environment:
