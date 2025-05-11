@@ -139,7 +139,7 @@ public class BotKeyboardConfig {
         row2.add(new KeyboardButton("Medium"));
 
         KeyboardRow row3 = new KeyboardRow();
-        row3.add(new KeyboardButton("Medium"));
+        row3.add(new KeyboardButton("Hard"));
 
         keyboard.add(row1);
         keyboard.add(row2);
