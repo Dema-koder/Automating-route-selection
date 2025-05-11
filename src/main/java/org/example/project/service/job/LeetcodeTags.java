@@ -27,7 +27,7 @@ public class LeetcodeTags {
             LocalDateTime start = LocalDateTime.now();
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI("http://localhost:3000/problems?limit=10000"))
+                    .uri(new URI("http://leetcode:3000/problems?limit=10000"))
                     .GET()
                     .build();
 
