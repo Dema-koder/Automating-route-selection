@@ -9,7 +9,9 @@ import org.example.project.data.leetcode.ProblemSet;
 import org.example.project.data.leetcode.Question;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -19,16 +21,16 @@ import java.util.*;
 @Service
 public class LeetcodeService {
 
-    public String getProblemWithTagAndDifficulty(String difficulty, String userTag) {
-        var problems = getProblemsWithTagAndDifficulty(difficulty, userTag);
-        if (problems == null)
-            return "Sorry, command did not performed";
+    public String getProblemWithTagAndDifficulty(String difficulty, String userTag) throws URISyntaxException, IOException, InterruptedException {
+        List<Problem> problems = getProblemsWithTagAndDifficulty(difficulty, userTag);
+        if (problems.isEmpty())
+            throw new IOException();
         int randomNumber = new Random().nextInt(problems.size());
         var randomProblem = problems.get(randomNumber);
         return "Title: " + randomProblem.title + "\nLink: https://leetcode.com/problems/" + randomProblem.titleSlug;
     }
 
-    private List<Problem> getProblemsWithTagAndDifficulty(String difficulty, String userTag) {
+    private List<Problem> getProblemsWithTagAndDifficulty(String difficulty, String userTag) throws URISyntaxException, IOException, InterruptedException {
         try {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
@@ -50,7 +52,7 @@ public class LeetcodeService {
             return problems;
         } catch (Exception e) {
             log.error("Exception: {}", e.getMessage());
-            return null;
+            throw e;
         }
     }
 

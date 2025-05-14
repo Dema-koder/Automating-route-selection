@@ -4,5 +4,6 @@ public enum DialogMode {
     MAIN,
     NOTE,
     GPT,
-    LEETCODE
+    LEETCODE,
+    INVEST
 }

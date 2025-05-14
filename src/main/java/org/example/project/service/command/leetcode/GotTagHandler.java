@@ -4,9 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.example.project.service.LeetcodeService;
 import org.example.project.service.TelegramMessageSender;
 import org.example.project.service.command.CommandHandler;
+import org.example.project.service.job.LeetcodeTags;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 @Component
 @RequiredArgsConstructor
@@ -18,12 +22,33 @@ public class GotTagHandler implements CommandHandler, LeetcodeCommandHandler{
 
     @Override
     public void handleCommand(long chatId, Update update) {
-        LeetcodeCommandHandlerFactory.setTag(update.getMessage().getText());
-        String link = leetcodeService.getProblemWithTagAndDifficulty(
-                LeetcodeCommandHandlerFactory.getDifficulty(),
-                LeetcodeCommandHandlerFactory.getTag()
+        String tag = update.getMessage().getText();
+        if (!LeetcodeTags.getTags().contains(tag)) {
+            messageSender.sendPlotToUserWithKeyboard(
+                    chatId,
+                    "Sorry, you sent wrong tag",
+                    leetcodeMenuKeyboard
+            );
+            return;
+        }
+        String link = "";
+        try {
+            link = leetcodeService.getProblemWithTagAndDifficulty(
+                    LeetcodeCommandHandlerFactory.getDifficulty(),
+                    tag
+            );
+        } catch (URISyntaxException | IOException | InterruptedException e) {
+            messageSender.sendMessageWithKeyboard(
+                    chatId,
+                    "Internal server error!",
+                    leetcodeMenuKeyboard
+            );
+        }
+        messageSender.sendMessageWithKeyboard(
+                chatId,
+                "Here is your task:\n" + link,
+                leetcodeMenuKeyboard
         );
-        messageSender.sendMessageWithKeyboard(chatId,"Here is your task:\n" + link, leetcodeMenuKeyboard);
     }
 
     @Override

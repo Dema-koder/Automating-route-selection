@@ -26,7 +26,7 @@ public class BotKeyboardConfig {
 
         KeyboardRow row3 = new KeyboardRow();
         row3.add(new KeyboardButton("/leetcode"));
-        row3.add(new KeyboardButton("/investplot"));
+        row3.add(new KeyboardButton("/invest"));
 
         keyboard.add(row1);
         keyboard.add(row2);
@@ -145,6 +145,42 @@ public class BotKeyboardConfig {
         keyboard.add(row1);
         keyboard.add(row2);
         keyboard.add(row3);
+
+        keyboardMarkup.setKeyboard(keyboard);
+        keyboardMarkup.setResizeKeyboard(true);
+        keyboardMarkup.setOneTimeKeyboard(true);
+
+        return keyboardMarkup;
+    }
+
+    @Bean
+    public ReplyKeyboardMarkup investMenuKeyboard() {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("15min"));
+        row1.add(new KeyboardButton("30min"));
+        row1.add(new KeyboardButton("1h"));
+
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(new KeyboardButton("3h"));
+        row2.add(new KeyboardButton("6h"));
+        row2.add(new KeyboardButton("12h"));
+
+        KeyboardRow row3 = new KeyboardRow();
+        row3.add(new KeyboardButton("day"));
+        row3.add(new KeyboardButton("week"));
+        row3.add(new KeyboardButton("month"));
+
+        KeyboardRow row4 = new KeyboardRow();
+        row4.add(new KeyboardButton("year"));
+        row4.add(new KeyboardButton("/back"));
+
+        keyboard.add(row1);
+        keyboard.add(row2);
+        keyboard.add(row3);
+        keyboard.add(row4);
 
         keyboardMarkup.setKeyboard(keyboard);
         keyboardMarkup.setResizeKeyboard(true);

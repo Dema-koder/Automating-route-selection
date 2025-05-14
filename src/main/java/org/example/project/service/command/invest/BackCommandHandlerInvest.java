@@ -1,4 +1,4 @@
-package org.example.project.service.command.leetcode;
+package org.example.project.service.command.invest;
 
 import lombok.RequiredArgsConstructor;
 import org.example.project.service.TelegramMessageSender;
@@ -11,7 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 
 @Component
 @RequiredArgsConstructor
-public class BackCommandHandler implements LeetcodeCommandHandler, CommandHandler {
+public class BackCommandHandlerInvest implements InvestCommandHandler, CommandHandler {
 
     private final TelegramMessageSender messageSender;
     private final UserSessionService userSessionService;
@@ -24,7 +24,8 @@ public class BackCommandHandler implements LeetcodeCommandHandler, CommandHandle
     }
 
     @Override
-    public boolean canHandle(String command, LeetcodeMode mode) {
+    public boolean canHandle(String command) {
         return command.equals("/back");
     }
 }
+
