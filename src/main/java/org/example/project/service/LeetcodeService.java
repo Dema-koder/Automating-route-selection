@@ -16,12 +16,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Service
 public class LeetcodeService {
 
-    public String getProblemWithTagAndDifficulty(String difficulty, String userTag) throws URISyntaxException, IOException, InterruptedException {
+    public String getProblemWithTagAndDifficulty(String difficulty, String userTag) throws URISyntaxException, IOException, InterruptedException, ExecutionException {
         List<Problem> problems = getProblemsWithTagAndDifficulty(difficulty, userTag);
         if (problems.isEmpty())
             throw new IOException();
@@ -30,7 +31,7 @@ public class LeetcodeService {
         return "Title: " + randomProblem.title + "\nLink: https://leetcode.com/problems/" + randomProblem.titleSlug;
     }
 
-    private List<Problem> getProblemsWithTagAndDifficulty(String difficulty, String userTag) throws URISyntaxException, IOException, InterruptedException {
+    private List<Problem> getProblemsWithTagAndDifficulty(String difficulty, String userTag) throws URISyntaxException, IOException, InterruptedException, ExecutionException {
         try {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
@@ -38,11 +39,11 @@ public class LeetcodeService {
                     .GET()
                     .build();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
 
             ObjectMapper objectMapper = new ObjectMapper();
 
-            ProblemSet problemset = objectMapper.readValue(response.body(), new TypeReference<>() {});
+            ProblemSet problemset = objectMapper.readValue(response.get().body(), new TypeReference<>() {});
 
             List<Problem> problems = new ArrayList<>();
             for (Question question : problemset.getProblemsetQuestionList()) {

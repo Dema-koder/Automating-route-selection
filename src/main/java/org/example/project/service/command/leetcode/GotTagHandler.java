@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.ExecutionException;
 
 @Component
 @RequiredArgsConstructor
@@ -37,7 +38,7 @@ public class GotTagHandler implements CommandHandler, LeetcodeCommandHandler{
                     LeetcodeCommandHandlerFactory.getDifficulty(),
                     tag
             );
-        } catch (URISyntaxException | IOException | InterruptedException e) {
+        } catch (URISyntaxException | IOException | InterruptedException | ExecutionException e) {
             messageSender.sendMessageWithKeyboard(
                     chatId,
                     "Internal server error!",
